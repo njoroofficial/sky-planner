@@ -1,0 +1,24 @@
+/* Custom CSS for Weather Event Planner */
+
+/* Global Styles */
+body {
+  background-color: var(--color-background);
+  background-image: linear-gradient(
+    135deg,
+    var(--color-background) 0%,
+    var(--color-surface) 100%
+  );
+  min-height: 100vh;
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+}
+
+/* Navigation Styles */
+.bg-primary-gradient {
+  background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);
+}
+
+.navbar-brand {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-2xl);
+}
