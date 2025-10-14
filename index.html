@@ -34,13 +34,78 @@
           <i class="bi bi-cloud-sun-fill me-2"></i>
           Sky-Planner
         </span>
-        <div class="navbar-nav">
-          <button class="btn btn-outline-light btn-sm">
-            <i class="bi bi-person-circle me-1"></i>
-            Login
-          </button>
-        </div>
+        <span class="navbar-brand mb-0 h1 text-white">
+          Weather-Event Planner
+        </span>
       </div>
     </nav>
+
+    <!-- Main WebPage -->
+    <div class="container-fluid py-4">
+      <div class="row g-4">
+        <!-- Left Sidebar: Event Creation & List -->,
+        <div class="col-lg-4">
+          <!-- Add New Event Card -->
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+              <h5 class="card-title mb-0">
+                <i class="bi bi-plus-circle-fill text-primary me-2"></i>
+                Create New Event
+              </h5>
+            </div>
+            <!-- Card Body -->
+            <div class="card-body">
+              <!-- Form -->
+              <form id="eventForm">
+                <div class="mb-3">
+                  <label for="eventName" class="form-label">Event Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="eventName"
+                    placeholder="Enter event name (e.g. Picnic at Central Park)"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="eventLocation" class="form-label">Location</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="eventLocation"
+                    placeholder="Enter location (e.g. Nairobi, Kenya)"
+                    required
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="eventDate" class="form-label">Date</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="eventDate"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="eventTime" class="form-label">Time</label>
+                  <input
+                    type="time"
+                    class="form-control"
+                    id="eventTime"
+                    required
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="bi bi-calendar-plus me-1"></i>
+                  Create Event
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
