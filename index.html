@@ -104,6 +104,49 @@
               </form>
             </div>
           </div>
+
+          <!-- Upcoming Events List -->
+          <div class="card shadow-sm">
+            <div class="card-header bg-light">
+              <h5 class="card-title mb-0">
+                <i class="bi bi-calendar-event text-primary me-2"></i>
+                Upcoming Events
+              </h5>
+            </div>
+            <!-- Card Body -->
+            <div class="card-body p-0">
+              <div id="eventsList" class="list-group list-group-flush">
+                <!-- Sample Event 1 -->
+                <div class="list-group-item event-item" data-event-id="1">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="event-info flex-grow-1">
+                      <h6 class="mb-1 text-primary">Picnic @ Central Park</h6>
+                      <p class="mb-1 text-muted small">
+                        <i class="bi bi-geo-alt me-1"></i>Nairobi, Kenya
+                      </p>
+                      <p class="mb-0 text-muted small">
+                        <i class="bi bi-clock me-1"></i>Oct 20, 2025 at 2:00 PM
+                      </p>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge bg-warning text-dark mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Medium Risk
+                      </span>
+                      <br />
+                      <button
+                        class="btn btn-outline-primary btn-sm view-details-btn"
+                        data-event-id="1"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- Sample Event 2 -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
