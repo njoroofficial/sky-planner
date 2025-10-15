@@ -234,7 +234,46 @@
               </div>
             </div>
 
-            <!-- Event Details Template -->
+            <!-- Event Details Template (Hidden by default)-->
+            <div id="eventDetailsTemplate" class="d-none">
+              <!-- Event Header -->
+              <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <div>
+                      <h4 class="mb-1" id="eventTitle">Event Title</h4>
+                      <p class="mb-0 text-muted">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        <span id="eventLocationDisplay">Location</span>
+                        <span class="mx-2">•</span>
+                        <i class="bi bi-calendar3 me-1"></i>
+                        <span id="eventDateTime">Date & Time</span>
+                      </p>
+                    </div>
+                    <div class="text-end">
+                      <span id="riskBadge" class="badge fs-6 mb-2"
+                        >Risk Level</span
+                      >
+                      <br />
+                      <button
+                        class="btn btn-outline-secondary btn-sm me-2"
+                        onclick="downloadChecklist()"
+                      >
+                        <i class="bi bi-download me-1"></i>Download
+                      </button>
+                      <button
+                        class="btn btn-outline-primary btn-sm"
+                        onclick="shareEvent()"
+                      >
+                        <i class="bi bi-share me-1"></i>Share
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
