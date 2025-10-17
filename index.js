@@ -3,6 +3,19 @@
  * Allows users to create, view, edit, and delete events with weather data integration
  */
 
+/**
+ * Converts UV index number to a descriptive category
+ * @param {number} uvIndex - UV index value (1-11+)
+ * @returns {string} - Description of UV risk level
+ */
+function getUVDescription(uvIndex) {
+  if (uvIndex <= 2) return "Low";
+  if (uvIndex <= 5) return "Moderate";
+  if (uvIndex <= 7) return "High";
+  if (uvIndex <= 10) return "Very High";
+  return "Extreme";
+}
+
 // Global state variables
 let events = []; // Stores all events
 let currentEventId = null; // Currently displayed event
