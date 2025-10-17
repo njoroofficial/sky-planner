@@ -90,6 +90,82 @@ function formatDate(date, time) {
   return dateObj.toLocaleDateString("en-US", options);
 }
 
+// --- Risk, packing, time slots generation
+
+/**
+ * Calculates event risk level based on weather conditions
+ * @param {Object} weather - Weather data object
+ * @returns {string} - Risk level: "low", "medium", or "high"
+ */
+function calculateRiskLevel(weather) {
+  let riskScore = 0;
+
+  // Temperature risk factors
+  const temp = parseInt(weather.temperature);
+  if (temp > 35 || temp < 5) riskScore += 2; // Extreme temperatures
+  else if (temp > 30 || temp < 10) riskScore += 1; // Uncomfortable temperatures
+
+  // Precipitation risk factors
+  const precip = parseInt(weather.precipitation);
+  if (precip > 70) riskScore += 2; // Heavy rain likely
+  else if (precip > 30) riskScore += 1; // Moderate chance of rain
+
+  // Wind risk factors
+  const wind = parseInt(weather.windSpeed);
+  if (wind > 25) riskScore += 2; // High winds
+  else if (wind > 15) riskScore += 1; // Moderate winds
+
+  // Determine overall risk level
+  if (riskScore >= 3) return "high";
+  if (riskScore >= 1) return "medium";
+  return "low";
+}
+
+/**
+ * Creates a suggested packing list based on weather conditions
+ * @param {Object} weather - Weather data object
+ * @returns {string[]} - Array of recommended items to pack
+ */
+function generatePackingList(weather) {
+  const items = [];
+  const precip = parseInt(weather.precipitation);
+  const temp = parseInt(weather.temperature);
+  const uvIndex = parseInt(weather.uvIndex);
+
+  // Always include essentials
+  items.push("Water bottle");
+
+  // Weather-specific items
+  if (precip > 20) items.push("Umbrella", "Waterproof jacket");
+  if (temp < 15) items.push("Warm jacket", "Blanket");
+  if (temp > 25) items.push("Hat", "Light clothing");
+  if (uvIndex > 5) items.push("Sunscreen", "Sunglasses");
+  if (parseInt(weather.windSpeed) > 15) items.push("Windbreaker");
+
+  return items;
+}
+
+/**
+ * Generates recommended time slots with risk levels
+ * @param {Object} weather - Weather data object
+ * @returns {Object[]} - Array of time slot objects with time and risk level
+ */
+function generateTimeSlots(weather) {
+  const baseRisk = calculateRiskLevel(weather);
+
+  // Define time slots throughout the day with varying risk levels
+  const slots = [
+    { time: "10:00 AM", risk: "low" }, // Morning usually has lower risk
+    { time: "12:00 PM", risk: baseRisk }, // Midday uses calculated risk
+    { time: "2:00 PM", risk: baseRisk }, // Afternoon uses calculated risk
+    { time: "4:00 PM", risk: baseRisk === "low" ? "medium" : "high" }, // Late afternoon - higher risk
+    { time: "6:00 PM", risk: "low" }, // Evening usually has lower risk
+  ];
+
+  // Return only the first 3 slots to avoid information overload
+  return slots.slice(0, 3);
+}
+
 /**
  * Fetches weather data from WeatherStack API for a given location
  * @param {string} location - Location name (e.g., "Nairobi, Kenya")
