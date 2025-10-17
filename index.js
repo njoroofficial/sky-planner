@@ -228,3 +228,53 @@ async function getWeatherData(location, date) {
     throw err;
   }
 }
+
+// --- DOM updates ---
+
+// Sets the minimum selectable date for the event date input to today
+function setMinDate() {
+  const today = new Date().toISOString().split("T")[0];
+  const el = document.getElementById("eventDate");
+  if (el) el.min = today;
+}
+
+// Adds an event to the events list in the DOM
+function addEventToList(event) {
+  const eventsList = document.getElementById("eventsList");
+  if (!eventsList) return;
+  const riskBadgeClass = getRiskBadgeClass(event.riskLevel);
+  const riskIcon = getRiskIcon(event.riskLevel);
+  const formattedDate = formatDate(event.date, event.time);
+
+  const eventElement = document.createElement("div");
+  eventElement.className = "list-group-item event-item fade-in";
+  eventElement.dataset.eventId = event.id;
+
+  eventElement.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="event-info flex-grow-1">
+                <h6 class="mb-1 text-primary">${event.name}</h6>
+                <p class="mb-1 text-muted small"><i class="bi bi-geo-alt me-1"></i>${
+                  event.location
+                }</p>
+                <p class="mb-0 text-muted small"><i class="bi bi-clock me-1"></i>${formattedDate}</p>
+            </div>
+            <div class="text-end">
+                <span class="badge ${riskBadgeClass} mb-2"><i class="${riskIcon} me-1"></i>${
+    event.riskLevel.charAt(0).toUpperCase() + event.riskLevel.slice(1)
+  } Risk</span><br>
+                <button class="btn btn-outline-primary btn-sm view-details-btn" data-event-id="${
+                  event.id
+                }">View Details</button>
+            </div>
+        </div>
+    `;
+
+  eventsList.appendChild(eventElement);
+  eventElement
+    .querySelector(".view-details-btn")
+    .addEventListener("click", (e) => {
+      const eventId = parseInt(e.target.dataset.eventId);
+      showEventDetails(eventId);
+    });
+}
