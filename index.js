@@ -278,3 +278,77 @@ function addEventToList(event) {
       showEventDetails(eventId);
     });
 }
+
+// Updates the weather alert section based on event risk level
+function updateWeatherAlert(event) {
+  const alertDiv = document.getElementById("weatherAlert");
+  const alertMessage = document.getElementById("alertMessage");
+  if (!alertDiv || !alertMessage) return;
+  let message = "";
+  let alertClass = "alert-info";
+  switch (event.riskLevel) {
+    case "low":
+      message = "Great weather conditions for your outdoor event!";
+      alertClass = "alert-success";
+      break;
+    case "medium":
+      message =
+        "Moderate risk conditions detected. Consider the recommendations below.";
+      alertClass = "alert-warning";
+      break;
+    case "high":
+      message =
+        "High risk weather conditions. We recommend rescheduling your event.";
+      alertClass = "alert-danger";
+      break;
+  }
+  alertDiv.className = `alert ${alertClass} mt-3`;
+  alertMessage.textContent = message;
+}
+
+// Updates the recommended time slots section in the DOM
+function updateTimeSlots(timeSlots) {
+  const container = document.getElementById("timeSlots");
+  if (!container) return;
+  container.innerHTML = "";
+  timeSlots.forEach((slot) => {
+    const slotElement = document.createElement("div");
+    slotElement.className =
+      "time-slot d-flex justify-content-between align-items-center mb-2";
+    slotElement.innerHTML = `<span><i class="bi bi-clock me-1"></i>${
+      slot.time
+    }</span><span class="badge ${getRiskBadgeClass(slot.risk)}">${
+      slot.risk.charAt(0).toUpperCase() + slot.risk.slice(1)
+    } Risk</span>`;
+    container.appendChild(slotElement);
+  });
+  const rescheduleBtn = document.createElement("div");
+  rescheduleBtn.className = "mt-3";
+  rescheduleBtn.innerHTML = `
+        <button class="btn btn-outline-warning btn-sm w-100" onclick="rescheduleEvent()">
+            <i class="bi bi-calendar-x me-1"></i>
+            Reschedule Event
+        </button>
+    `;
+  container.appendChild(rescheduleBtn);
+}
+
+// Updates the packing list section in the DOM
+function updatePackingList(packingList) {
+  const container = document.getElementById("packingList");
+  if (!container) return;
+  container.innerHTML = "";
+  packingList.forEach((item, index) => {
+    const itemElement = document.createElement("div");
+    itemElement.className = "form-check mb-2";
+    itemElement.innerHTML = `
+            <input class="form-check-input" type="checkbox" id="item${
+              index + 1
+            }">
+            <label class="form-check-label" for="item${
+              index + 1
+            }"><i class="bi bi-${getItemIcon(item)} me-1"></i>${item}</label>
+        `;
+    container.appendChild(itemElement);
+  });
+}
