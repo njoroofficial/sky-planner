@@ -352,3 +352,195 @@ function updatePackingList(packingList) {
     container.appendChild(itemElement);
   });
 }
+
+// Displays detailed information for a selected event
+function showEventDetails(eventId) {
+  const event = events.find((e) => e.id === eventId);
+  if (!event) return;
+  currentEventId = eventId;
+  const welcome = document.getElementById("welcomeMessage");
+  if (welcome) welcome.classList.add("d-none");
+  const template = document.getElementById("eventDetailsTemplate");
+  if (template) {
+    template.classList.remove("d-none");
+    template.classList.add("fade-in");
+  }
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  setText("eventTitle", event.name);
+  setText("eventLocationDisplay", event.location);
+  setText("eventDateTime", formatDate(event.date, event.time));
+  const riskBadge = document.getElementById("riskBadge");
+  if (riskBadge) {
+    riskBadge.className = `badge fs-6 mb-2 ${getRiskBadgeClass(
+      event.riskLevel
+    )}`;
+    riskBadge.innerHTML = `<i class="${getRiskIcon(
+      event.riskLevel
+    )} me-1"></i>${
+      event.riskLevel.charAt(0).toUpperCase() + event.riskLevel.slice(1)
+    } Risk`;
+  }
+  setText("temperature", event.weather.temperature);
+  setText("weatherCondition", event.weather.condition);
+  setText("precipitation", event.weather.precipitation);
+  setText("windSpeed", event.weather.windSpeed);
+  setText("uvIndex", event.weather.uvIndex);
+  updateWeatherAlert(event);
+  updateTimeSlots(event.timeSlots);
+  updatePackingList(event.packingList);
+
+  // Add edit and delete buttons
+  updateEventActionButtons(event);
+}
+
+// Updates the action buttons (edit, delete) for the event details view
+function updateEventActionButtons(event) {
+  const actionContainer =
+    document.querySelector(".modal-footer") ||
+    document.querySelector("#eventDetailsTemplate .card-header .d-flex");
+
+  if (!actionContainer) return;
+
+  // Remove existing action buttons if any
+  const existingEditBtn = document.getElementById("editEventBtn");
+  if (existingEditBtn) existingEditBtn.remove();
+
+  const existingDeleteBtn = document.getElementById("deleteEventBtn");
+  if (existingDeleteBtn) existingDeleteBtn.remove();
+
+  // Add edit button
+  const editBtn = document.createElement("button");
+  editBtn.id = "editEventBtn";
+  editBtn.className = "btn btn-outline-primary btn-sm me-2";
+  editBtn.innerHTML = '<i class="bi bi-pencil-square me-1"></i>Edit Event';
+  editBtn.addEventListener("click", () => showEditEventModal(event.id));
+
+  // Add delete button
+  const deleteBtn = document.createElement("button");
+  deleteBtn.id = "deleteEventBtn";
+  deleteBtn.className = "btn btn-outline-danger btn-sm";
+  deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Delete Event';
+  deleteBtn.addEventListener("click", () => confirmDeleteEvent(event.id));
+
+  // Add buttons to container
+  actionContainer.appendChild(editBtn);
+  actionContainer.appendChild(deleteBtn);
+}
+
+// Shows the edit event modal with pre-filled data
+function showEditEventModal(eventId) {
+  const event = events.find((e) => e.id === eventId);
+  if (!event) return;
+
+  // Create modal if it doesn't exist
+  if (!document.getElementById("editEventModal")) {
+    const modal = document.createElement("div");
+    modal.id = "editEventModal";
+    modal.className = "modal fade";
+    modal.setAttribute("tabindex", "-1");
+    modal.innerHTML = `
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Event</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editEventForm">
+              <div class="mb-3">
+                <label for="editEventName" class="form-label">Event Name</label>
+                <input type="text" class="form-control" id="editEventName" required>
+              </div>
+              <div class="mb-3">
+                <label for="editEventLocation" class="form-label">Location</label>
+                <input type="text" class="form-control" id="editEventLocation" required>
+              </div>
+              <div class="mb-3">
+                <label for="editEventDate" class="form-label">Date</label>
+                <input type="date" class="form-control" id="editEventDate" required>
+              </div>
+              <div class="mb-3">
+                <label for="editEventTime" class="form-label">Time</label>
+                <input type="time" class="form-control" id="editEventTime" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveEditBtn">Save changes</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // Populate form with event data
+  document.getElementById("editEventName").value = event.name;
+  document.getElementById("editEventLocation").value = event.location;
+  document.getElementById("editEventDate").value = event.date;
+  document.getElementById("editEventTime").value = event.time;
+
+  // Show the modal
+  const modal = document.getElementById("editEventModal");
+  const bsModal =
+    bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+  bsModal.show();
+
+  // Add event listener to save button
+  document.getElementById("saveEditBtn").onclick = async function () {
+    const updatedEvent = {
+      name: document.getElementById("editEventName").value,
+      location: document.getElementById("editEventLocation").value,
+      date: document.getElementById("editEventDate").value,
+      time: document.getElementById("editEventTime").value,
+    };
+
+    if (!validateFormData(updatedEvent)) return;
+
+    try {
+      // Get new weather data if location or date changed
+      if (
+        updatedEvent.location !== event.location ||
+        updatedEvent.date !== event.date
+      ) {
+        const weatherData = await getWeatherData(
+          updatedEvent.location,
+          updatedEvent.date
+        );
+        updatedEvent.weather = weatherData;
+        updatedEvent.riskLevel = calculateRiskLevel(weatherData);
+        updatedEvent.packingList = generatePackingList(weatherData);
+        updatedEvent.timeSlots = generateTimeSlots(weatherData);
+      }
+
+      await updateEvent(event.id, updatedEvent);
+
+      // Update UI
+      showEventDetails(event.id);
+
+      // Update event in list
+      const eventElement = document.querySelector(
+        `.event-item[data-event-id="${event.id}"]`
+      );
+      if (eventElement) {
+        // Remove and re-add to refresh
+        eventElement.remove();
+        const updatedEventObj = events.find((e) => e.id === event.id);
+        if (updatedEventObj) {
+          addEventToList(updatedEventObj);
+        }
+      }
+
+      bsModal.hide();
+      showSuccessMessage("Event updated successfully!");
+    } catch (err) {
+      showErrorMessage(
+        "Failed to update event: " + (err.message || "Please try again.")
+      );
+    }
+  };
+}
