@@ -3,6 +3,11 @@
  * Allows users to create, view, edit, and delete events with weather data integration
  */
 
+// Global state variables
+let events = []; // Stores all events
+let currentEventId = null; // Currently displayed event
+let weatherApiKey = "05e7bdd29b152cef4f05d427a6e4a4f0"; // WeatherStack API key
+
 /**
  * Converts UV index number to a descriptive category
  * @param {number} uvIndex - UV index value (1-11+)
@@ -16,10 +21,55 @@ function getUVDescription(uvIndex) {
   return "Extreme";
 }
 
-// Global state variables
-let events = []; // Stores all events
-let currentEventId = null; // Currently displayed event
-let weatherApiKey = "05e7bdd29b152cef4f05d427a6e4a4f0"; // WeatherStack API key
+/**
+ * Gets Bootstrap color class based on risk level
+ * @param {string} riskLevel - "low", "medium", or "high"
+ * @returns {string} - CSS class name for appropriate badge color
+ */
+function getRiskBadgeClass(riskLevel) {
+  const classMap = {
+    low: "bg-success",
+    medium: "bg-warning text-dark",
+    high: "bg-danger",
+  };
+  return classMap[riskLevel] || "bg-secondary";
+}
+
+/**
+ * Gets Bootstrap icon class based on risk level
+ * @param {string} riskLevel - "low", "medium", or "high"
+ * @returns {string} - Bootstrap icon class name
+ */
+function getRiskIcon(riskLevel) {
+  const iconMap = {
+    low: "bi-check-circle-fill",
+    medium: "bi-exclamation-triangle-fill",
+    high: "bi-x-circle-fill",
+  };
+  return iconMap[riskLevel] || "bi-info-circle-fill";
+}
+
+/**
+ * Maps packing list item names to appropriate Bootstrap icons
+ * @param {string} item - Name of packing list item
+ * @returns {string} - Bootstrap icon name for the item
+ */
+function getItemIcon(item) {
+  const iconMap = {
+    Umbrella: "umbrella",
+    "Light jacket": "coat-hanger",
+    Sunscreen: "sun",
+    "Water bottle": "droplet",
+    "Picnic blanket": "grid-3x3",
+    Hat: "person-badge",
+    Sunglasses: "eyeglasses",
+    "Waterproof jacket": "shield-check",
+    "Warm jacket": "thermometer-low",
+    Windbreaker: "wind",
+    "Sports gear": "bag",
+  };
+  return iconMap[item] || "check-circle";
+}
 
 /**
  * Fetches weather data from WeatherStack API for a given location
