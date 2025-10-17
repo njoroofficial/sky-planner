@@ -544,3 +544,102 @@ function showEditEventModal(eventId) {
     }
   };
 }
+
+// --- Form handling ---
+/**
+ * Validates event form data for required fields and logical constraints
+ * @param {Object} formData - Data from the event form to validate
+ * @param {string} formData.name - Event name
+ * @param {string} formData.location - Event location
+ * @param {string} formData.date - Event date in YYYY-MM-DD format
+ * @param {string} formData.time - Event time in HH:MM format
+ * @returns {boolean} True if validation passes, false otherwise
+ */
+function validateForm(formData) {
+  // Check required fields
+  if (!formData.name.trim()) {
+    showErrorMessage("Please enter an event name");
+    return false;
+  }
+
+  if (!formData.location.trim()) {
+    showErrorMessage("Please enter a location");
+    return false;
+  }
+
+  if (!formData.date) {
+    showErrorMessage("Please select a date");
+    return false;
+  }
+
+  if (!formData.time) {
+    showErrorMessage("Please select a time");
+    return false;
+  }
+
+  // Check that event is in the future
+  const selectedDate = new Date(formData.date + "T" + formData.time);
+  const now = new Date();
+  if (selectedDate <= now) {
+    showErrorMessage("Please select a future date and time");
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Resets the event form to its initial state
+ */
+function clearForm() {
+  const form = document.getElementById("eventForm");
+  if (form) form.reset();
+}
+
+/**
+ * Displays a toast notification with custom message and type
+ * @param {string} message - Message to display in the toast
+ * @param {string} type - Type of toast: 'success' or 'error'
+ * @param {number} [timeout=5000] - Time in milliseconds before auto-dismissal
+ */
+function showToast(message, type, timeout = 5000) {
+  // Create toast element
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type} position-fixed top-0 end-0 m-3`;
+  toast.style.zIndex = "9999";
+
+  // Set appropriate icon based on toast type
+  toast.innerHTML = `
+        <div class="toast-body d-flex align-items-center">
+            <i class="bi bi-${
+              type === "success" ? "check-circle" : "exclamation-triangle"
+            } me-2"></i>
+            ${message}
+            <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+
+  // Add to DOM
+  document.body.appendChild(toast);
+
+  // Auto-dismiss after timeout
+  setTimeout(() => {
+    if (toast.parentElement) toast.remove();
+  }, timeout);
+}
+
+/**
+ * Displays a success toast notification
+ * @param {string} message - Success message to display
+ */
+function showSuccessMessage(message) {
+  showToast(message, "success");
+}
+
+/**
+ * Displays an error toast notification
+ * @param {string} message - Error message to display
+ */
+function showErrorMessage(message) {
+  showToast(message, "error");
+}
