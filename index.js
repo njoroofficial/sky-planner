@@ -72,6 +72,25 @@ function getItemIcon(item) {
 }
 
 /**
+ * Formats date and time values into a human-friendly string
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @param {string} time - Time in HH:MM format
+ * @returns {string} - Formatted date string (e.g., "Oct 21, 2025 at 4:00 PM")
+ */
+function formatDate(date, time) {
+  const dateObj = new Date(date + "T" + time);
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  };
+  return dateObj.toLocaleDateString("en-US", options);
+}
+
+/**
  * Fetches weather data from WeatherStack API for a given location
  * @param {string} location - Location name (e.g., "Nairobi, Kenya")
  * @param {string} date - Event date (currently only used for logging)
