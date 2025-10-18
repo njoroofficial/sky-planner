@@ -780,3 +780,124 @@ async function deleteEvent(id) {
     throw err;
   }
 }
+
+/**
+ * Creates a new event from form data, fetches weather, and saves to database
+ * @param {Object} formData - Data from the event creation form
+ * @param {HTMLElement} submitBtn - Button that triggered the submission (for UI updates)
+ * @returns {Promise<void>}
+ */
+async function createEvent(formData, submitBtn) {
+  // Validate form before proceeding
+  if (!validateForm(formData)) return;
+
+  // Update UI to show loading state
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<span class="loading"></span> Creating...';
+  submitBtn.disabled = true;
+
+  try {
+    // Get weather data from API for the event location
+    const weatherData = await getWeatherData(formData.location, formData.date);
+
+    // Build complete event object with derived data
+    const newEvent = {
+      id: events.length + 1,
+      ...formData,
+      riskLevel: calculateRiskLevel(weatherData),
+      weather: weatherData,
+      packingList: generatePackingList(weatherData),
+      timeSlots: generateTimeSlots(weatherData),
+    };
+
+    // Persist the new event
+    await createEventOnServer(newEvent);
+
+    // Update UI after successful creation
+    addEventToList(newEvent);
+    clearForm();
+    showSuccessMessage("Event created successfully!");
+  } catch (err) {
+    // Handle any errors that occurred during creation
+    console.error("Error creating event:", err);
+    showErrorMessage(
+      "Failed to create event: " + (err.message || "Please try again.")
+    );
+  } finally {
+    // Restore button state regardless of success/failure
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }
+}
+
+// --- Initialization & wiring ---
+function bindEvents() {
+  const form = document.getElementById("eventForm");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const formData = {
+        name: document.getElementById("eventName").value,
+        location: document.getElementById("eventLocation").value,
+        date: document.getElementById("eventDate").value,
+        time: document.getElementById("eventTime").value,
+      };
+      const submitBtn = form.querySelector('button[type="submit"]');
+      createEvent(formData, submitBtn);
+    });
+  }
+
+  document.querySelectorAll(".view-details-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const eventId = parseInt(e.target.dataset.eventId);
+      showEventDetails(eventId);
+    });
+  });
+}
+
+async function loadInitialData() {
+  try {
+    // Use our fetchEvents function to get events from the server
+    events = await fetchEvents();
+
+    if (events.length === 0) {
+      showErrorMessage("No events found. Create your first event!");
+    } else {
+      showSuccessMessage(`Loaded ${events.length} events from database.`);
+    }
+  } catch (err) {
+    console.error("Error loading initial data:", err);
+    showErrorMessage(
+      "Failed to load events. Please ensure db.json exists in your data folder."
+    );
+
+    // Initialize with empty events array
+    events = [];
+  }
+
+  // Populate list
+  const eventsListEl = document.getElementById("eventsList");
+  if (eventsListEl) eventsListEl.innerHTML = "";
+  events.forEach(addEventToList);
+}
+
+/**
+ * Initialize the application
+ */
+async function init() {
+  setMinDate();
+  bindEvents();
+  await loadInitialData();
+}
+
+// Start when DOM is ready
+document.addEventListener("DOMContentLoaded", init);
+
+// Expose globals used by inline onclicks in HTML
+
+window.rescheduleEvent = rescheduleEvent;
+window.formatDate = formatDate;
+window.updateEvent = updateEvent;
+window.deleteEvent = deleteEvent;
+window.showEditEventModal = showEditEventModal;
+window.confirmDeleteEvent = confirmDeleteEvent;
