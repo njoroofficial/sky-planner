@@ -643,3 +643,140 @@ function showSuccessMessage(message) {
 function showErrorMessage(message) {
   showToast(message, "error");
 }
+
+// --- Persistent storage functions to the db.json ---
+// API base URL
+const API_BASE_URL = "http://localhost:3000";
+
+/**
+ * Fetches all events using a GET request to the API
+ * @returns {Promise<Array>} Array of event objects
+ * @throws {Error} If fetch fails or response is not OK
+ */
+async function fetchEvents() {
+  try {
+    // Make GET request to fetch all events
+    const response = await fetch(`${API_BASE_URL}/events`);
+
+    // Handle HTTP errors
+    if (!response.ok) {
+      throw new Error(`Failed to fetch events: ${response.status}`);
+    }
+
+    // Parse JSON response
+    const events = await response.json();
+    return events || [];
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    showErrorMessage("Failed to fetch events from the server.");
+    throw err;
+  }
+}
+
+/**
+ * Creates a new event by sending a POST request to add it to db.json
+ * @param {Object} eventData - The event data to save
+ * @returns {Promise<Object>} The created event object
+ * @throws {Error} If save operation fails
+ */
+async function createEventOnServer(eventData) {
+  try {
+    // Make POST request to the server to create a new event
+    const response = await fetch(`${API_BASE_URL}/events`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(eventData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create event: ${response.status}`);
+    }
+
+    // Parse the response to get the created event
+    const createdEvent = await response.json();
+
+    // Add to our local array for immediate UI update
+    events.push(createdEvent);
+
+    return createdEvent;
+  } catch (err) {
+    console.error("Error creating event on server:", err);
+    showErrorMessage("Failed to save the new event.");
+    throw err;
+  }
+}
+
+/**
+ * Updates an existing event by ID using a PATCH request
+ * @param {string} id - The ID of the event to update
+ * @param {Object} eventData - The new event data (partial or complete)
+ * @returns {Promise<Object>} The updated event object
+ * @throws {Error} If event not found or save operation fails
+ */
+async function updateEvent(id, eventData) {
+  try {
+    // Make PATCH request to update the event
+    const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(eventData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update event: ${response.status}`);
+    }
+
+    // Parse the response to get the updated event
+    const updatedEvent = await response.json();
+
+    // Update our local array for immediate UI update
+    const index = events.findIndex((e) => e.id === id);
+    if (index !== -1) {
+      events[index] = updatedEvent;
+    }
+
+    return updatedEvent;
+  } catch (err) {
+    console.error(`Error updating event ${id}:`, err);
+    showErrorMessage("Failed to update the event.");
+    throw err;
+  }
+}
+
+/**
+ * Deletes an event by ID using a DELETE request
+ * @param {string} id - The ID of the event to delete
+ * @returns {Promise<Object>} Object with success status and deleted ID
+ * @throws {Error} If event not found or delete operation fails
+ */
+async function deleteEvent(id) {
+  try {
+    // Make DELETE request to remove the event
+    const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete event: ${response.status}`);
+    }
+
+    // Remove from our local array for immediate UI update
+    const initialLength = events.length;
+    events = events.filter((e) => e.id !== id);
+
+    // Verify event was actually found and removed
+    if (events.length === initialLength) {
+      throw new Error(`Event with ID ${id} not found in local array`);
+    }
+
+    return { success: true, id };
+  } catch (err) {
+    console.error(`Error deleting event ${id}:`, err);
+    showErrorMessage("Failed to delete the event.");
+    throw err;
+  }
+}
