@@ -322,6 +322,15 @@ function updateTimeSlots(timeSlots) {
     } Risk</span>`;
     container.appendChild(slotElement);
   });
+  // const rescheduleBtn = document.createElement("div");
+  // rescheduleBtn.className = "mt-3";
+  // rescheduleBtn.innerHTML = `
+  //       <button class="btn btn-outline-warning btn-sm w-100" onclick="rescheduleEvent()">
+  //           <i class="bi bi-calendar-x me-1"></i>
+  //           Reschedule Event
+  //       </button>
+  //   `;
+  // container.appendChild(rescheduleBtn);
 }
 
 // Updates the packing list section in the DOM
@@ -346,7 +355,7 @@ function updatePackingList(packingList) {
 
 // Displays detailed information for a selected event
 function showEventDetails(eventId) {
-  const event = events.find((e) => e.id === eventId);
+  const event = events.find((e) => String(e.id) === String(eventId));
   if (!event) return;
   currentEventId = eventId;
   const welcome = document.getElementById("welcomeMessage");
@@ -389,12 +398,14 @@ function showEventDetails(eventId) {
 
 // Updates the action buttons (edit, delete) for the event details view
 function updateEventActionButtons(event) {
-  const actionContainer =
-    document.querySelector(".modal-footer") ||
-    document.querySelector("#eventDetailsTemplate .card-header .d-flex");
+  // Always target the event details header action area
+  const actionContainer = document.querySelector(
+    "#eventDetailsTemplate .card-header .d-flex"
+  );
 
   if (!actionContainer) return;
-  // Remove existing action buttons if any (prevents duplicates)
+
+  // Remove existing action buttons if any
   const existingEditBtn = document.getElementById("editEventBtn");
   if (existingEditBtn) existingEditBtn.remove();
 
@@ -425,7 +436,7 @@ function showEditEventModal(eventId) {
   const event = events.find((e) => e.id === eventId);
   if (!event) return;
 
-  // Create modal for editing the event
+  // Create modal to edit event
   if (!document.getElementById("editEventModal")) {
     const modal = document.createElement("div");
     modal.id = "editEventModal";
@@ -489,7 +500,6 @@ function showEditEventModal(eventId) {
       time: document.getElementById("editEventTime").value,
     };
 
-    // Use the shared validateForm function defined elsewhere in this file
     if (!validateForm(updatedEvent)) return;
 
     try {
@@ -708,8 +718,9 @@ async function createEventOnServer(eventData) {
  */
 async function updateEvent(id, eventData) {
   try {
-    // Make PATCH request to update the event
-    const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+    const url = `${API_BASE_URL}/events/${encodeURIComponent(String(id))}`;
+    // Attempt PATCH first
+    let response = await fetch(url, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -717,7 +728,25 @@ async function updateEvent(id, eventData) {
       body: JSON.stringify(eventData),
     });
 
+    // If PATCH not supported or resource not found, try PUT with id included
+    if (!response.ok && (response.status === 404 || response.status === 405)) {
+      const putBody = { id, ...eventData };
+      response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(putBody),
+      });
+    }
+
     if (!response.ok) {
+      // Helpful diagnostics
+      console.error("Update failed", {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+      });
       throw new Error(`Failed to update event: ${response.status}`);
     }
 
@@ -725,7 +754,7 @@ async function updateEvent(id, eventData) {
     const updatedEvent = await response.json();
 
     // Update our local array for immediate UI update
-    const index = events.findIndex((e) => e.id === id);
+    const index = events.findIndex((e) => String(e.id) === String(id));
     if (index !== -1) {
       events[index] = updatedEvent;
     }
@@ -746,18 +775,28 @@ async function updateEvent(id, eventData) {
  */
 async function deleteEvent(id) {
   try {
+    const url = `${API_BASE_URL}/events/${encodeURIComponent(String(id))}`;
     // Make DELETE request to remove the event
-    const response = await fetch(`${API_BASE_URL}/events/${id}`, {
-      method: "DELETE",
-    });
+    let response = await fetch(url, { method: "DELETE" });
+
+    // With some setups, DELETE may require a prior existence check; try GET for diagnostics
+    if (!response.ok && response.status === 404) {
+      const existence = await fetch(url, { method: "GET" });
+      console.warn("Delete 404; existence check status:", existence.status);
+    }
 
     if (!response.ok) {
+      console.error("Delete failed", {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+      });
       throw new Error(`Failed to delete event: ${response.status}`);
     }
 
     // Remove from our local array for immediate UI update
     const initialLength = events.length;
-    events = events.filter((e) => e.id !== id);
+    events = events.filter((e) => String(e.id) !== String(id));
 
     // Verify event was actually found and removed
     if (events.length === initialLength) {
@@ -772,35 +811,35 @@ async function deleteEvent(id) {
   }
 }
 
-// Confirm and delete an event (updates server and UI)
-function confirmDeleteEvent(eventId) {
-  const event = events.find((e) => e.id === eventId);
-  if (!event) return;
+/**
+ * Asks user to confirm deletion, deletes via API, and updates UI
+ * @param {string|number} id - Event ID to delete
+ */
+async function confirmDeleteEvent(id) {
+  const proceed = window.confirm("Are you sure you want to delete this event?");
+  if (!proceed) return;
 
-  if (confirm(`Are you sure you want to delete the event "${event.name}"?`)) {
-    deleteEvent(eventId)
-      .then(() => {
-        // Return to welcome screen
-        const details = document.getElementById("eventDetailsTemplate");
-        if (details) details.classList.add("d-none");
-        const welcome = document.getElementById("welcomeMessage");
-        if (welcome) welcome.classList.remove("d-none");
+  try {
+    await deleteEvent(id);
 
-        // Remove from UI list
-        const eventElement = document.querySelector(
-          `.event-item[data-event-id="${eventId}"]`
-        );
-        if (eventElement) {
-          eventElement.remove();
-        }
+    // Remove from list UI
+    const eventElement = document.querySelector(
+      `.event-item[data-event-id="${id}"]`
+    );
+    if (eventElement) eventElement.remove();
 
-        showSuccessMessage("Event deleted successfully!");
-      })
-      .catch((err) => {
-        showErrorMessage(
-          "Failed to delete event: " + (err.message || "Please try again.")
-        );
-      });
+    // If details view is showing this event, clear it
+    if (String(currentEventId) === String(id)) {
+      currentEventId = null;
+      const template = document.getElementById("eventDetailsTemplate");
+      if (template) template.classList.add("d-none");
+      const welcome = document.getElementById("welcomeMessage");
+      if (welcome) welcome.classList.remove("d-none");
+    }
+
+    showSuccessMessage("Event deleted successfully!");
+  } catch (err) {
+    // Error message already shown in deleteEvent
   }
 }
 
@@ -918,7 +957,6 @@ document.addEventListener("DOMContentLoaded", init);
 
 // Expose globals used by inline onclicks in HTML
 
-window.rescheduleEvent = rescheduleEvent;
 window.formatDate = formatDate;
 window.updateEvent = updateEvent;
 window.deleteEvent = deleteEvent;
