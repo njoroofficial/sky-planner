@@ -4,52 +4,20 @@
       "id": 1,
       "name": "Swimming",
       "location": "Nairobi,Kenya",
-      "date": "2025-10-19",
-      "time": "13:05",
+      "date": "2025-10-25",
+      "time": "14:13",
       "riskLevel": "low",
       "weather": {
-        "temperature": "16°C",
+        "temperature": "27°C",
         "condition": "Partly cloudy",
         "precipitation": "0%",
-        "windSpeed": "9 km/h",
-        "uvIndex": "1 (Low)"
-      },
-      "packingList": [
-        "Water bottle"
-      ],
-      "timeSlots": [
-        {
-          "time": "10:00 AM",
-          "risk": "low"
-        },
-        {
-          "time": "12:00 PM",
-          "risk": "low"
-        },
-        {
-          "time": "2:00 PM",
-          "risk": "low"
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "name": "Working",
-      "location": "Murang`a,Kenya",
-      "date": "2025-10-20",
-      "time": "08:21",
-      "riskLevel": "low",
-      "weather": {
-        "temperature": "20°C",
-        "condition": "Patchy rain nearby",
-        "precipitation": "1.1%",
-        "windSpeed": "4 km/h",
-        "uvIndex": "9 (Very High)"
+        "windSpeed": "15 km/h",
+        "uvIndex": "5 (Moderate)"
       },
       "packingList": [
         "Water bottle",
-        "Sunscreen",
-        "Sunglasses"
+        "Hat",
+        "Light clothing"
       ],
       "timeSlots": [
         {

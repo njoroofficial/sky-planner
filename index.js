@@ -322,15 +322,6 @@ function updateTimeSlots(timeSlots) {
     } Risk</span>`;
     container.appendChild(slotElement);
   });
-  const rescheduleBtn = document.createElement("div");
-  rescheduleBtn.className = "mt-3";
-  rescheduleBtn.innerHTML = `
-        <button class="btn btn-outline-warning btn-sm w-100" onclick="rescheduleEvent()">
-            <i class="bi bi-calendar-x me-1"></i>
-            Reschedule Event
-        </button>
-    `;
-  container.appendChild(rescheduleBtn);
 }
 
 // Updates the packing list section in the DOM
@@ -403,8 +394,7 @@ function updateEventActionButtons(event) {
     document.querySelector("#eventDetailsTemplate .card-header .d-flex");
 
   if (!actionContainer) return;
-
-  // Remove existing action buttons if any
+  // Remove existing action buttons if any (prevents duplicates)
   const existingEditBtn = document.getElementById("editEventBtn");
   if (existingEditBtn) existingEditBtn.remove();
 
@@ -435,7 +425,7 @@ function showEditEventModal(eventId) {
   const event = events.find((e) => e.id === eventId);
   if (!event) return;
 
-  // Create modal if it doesn't exist
+  // Create modal for editing the event
   if (!document.getElementById("editEventModal")) {
     const modal = document.createElement("div");
     modal.id = "editEventModal";
@@ -499,7 +489,8 @@ function showEditEventModal(eventId) {
       time: document.getElementById("editEventTime").value,
     };
 
-    if (!validateFormData(updatedEvent)) return;
+    // Use the shared validateForm function defined elsewhere in this file
+    if (!validateForm(updatedEvent)) return;
 
     try {
       // Get new weather data if location or date changed
@@ -778,6 +769,38 @@ async function deleteEvent(id) {
     console.error(`Error deleting event ${id}:`, err);
     showErrorMessage("Failed to delete the event.");
     throw err;
+  }
+}
+
+// Confirm and delete an event (updates server and UI)
+function confirmDeleteEvent(eventId) {
+  const event = events.find((e) => e.id === eventId);
+  if (!event) return;
+
+  if (confirm(`Are you sure you want to delete the event "${event.name}"?`)) {
+    deleteEvent(eventId)
+      .then(() => {
+        // Return to welcome screen
+        const details = document.getElementById("eventDetailsTemplate");
+        if (details) details.classList.add("d-none");
+        const welcome = document.getElementById("welcomeMessage");
+        if (welcome) welcome.classList.remove("d-none");
+
+        // Remove from UI list
+        const eventElement = document.querySelector(
+          `.event-item[data-event-id="${eventId}"]`
+        );
+        if (eventElement) {
+          eventElement.remove();
+        }
+
+        showSuccessMessage("Event deleted successfully!");
+      })
+      .catch((err) => {
+        showErrorMessage(
+          "Failed to delete event: " + (err.message || "Please try again.")
+        );
+      });
   }
 }
 
